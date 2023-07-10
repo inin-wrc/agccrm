@@ -1,0 +1,146 @@
+<?xml version="1.0"?>
+
+<robot name="scout_mini"
+    xmlns:xacro="http://ros.org/wiki/xacro">
+
+    <xacro:arg name="robot_namespace" default="" />
+
+    
+    <xacro:include filename="$(find scout_description)/urdf/scout_mini_wheel_1.xacro" />
+    <xacro:include filename="$(find scout_description)/urdf/scout_mini_wheel_2.xacro" />
+    <xacro:include filename="$(find scout_description)/urdf/scout_mini_wheel_3.xacro" />
+    <xacro:include filename="$(find scout_description)/urdf/scout_mini_wheel_4.xacro" />
+    <xacro:include filename="$(find scout_description)/urdf/inertial.xacro" />
+
+
+    <!-- Variables -->
+    <xacro:property name="M_PI" value="3.14159"/>
+
+    <!-- Vehicle Geometries -->
+    <xacro:property name="base_x_size" value="0.6200000" />
+    <xacro:property name="base_y_size" value="0.585000" />
+    <xacro:property name="base_z_size" value="0.235000" />
+
+    <xacro:property name="wheelbase" value="0.463951"/>
+    <xacro:property name="track" value="0.416503"/>
+    <xacro:property name="wheel_vertical_offset" value="-0.100998" />
+
+    <xacro:arg name="gpu" default="true"/>
+    <xacro:property name="gpu" value="$(arg gpu)" />
+    <xacro:arg name="organize_cloud" default="true"/>
+    <xacro:property name="organize_cloud" value="$(arg organize_cloud)" />
+
+    <xacro:include filename="$(find scout_description)/urdf/inertial.xacro" />
+
+    <!-- VLP16 激光雷达 -->
+    <xacro:include filename="$(find scout_description)/urdf/laser_support.xacro" />
+    <xacro:include filename="$(find velodyne_description)/urdf/VLP-16.urdf.xacro"/>
+    <xacro:VLP-16 parent="support" name="velodyne" topic="/velodyne_points" organize_cloud="${organize_cloud}" hz="10" samples="440" gpu="${gpu}">
+          <origin xyz="0 0 ${support_length/2-0.11}" rpy="0 0 0" />
+    </xacro:VLP-16>
+
+    <gazebo>
+      <plugin name="p3d_base_controller" filename="libgazebo_ros_p3d.so">
+        <alwaysOn>true</alwaysOn>
+        <updateRate>50.0</updateRate>
+        <bodyName>base_link</bodyName>
+        <topicName>pose_ground_truth</topicName>
+        <gaussianNoise>0.0</gaussianNoise>
+        <frameName>map</frameName>
+        <xyzOffsets>0 0 0</xyzOffsets>
+        <rpyOffsets>0 0 0</rpyOffsets>
+      </plugin>
+    </gazebo>
+
+
+
+<!--    <xacro:property name="track" value="0.3426" />
+    <xacro:property name="wheelbase" value="0.3181"/>
+    <xacro:property name="wheel_vertical_offset" value="-0.160000047342231" />-->
+
+    <xacro:property name="wheel_length" value="0.8e-01" />
+    <xacro:property name="wheel_radius" value="1.600e-01" />
+
+    <!-- Base link -->
+    <link name="base_link">
+        <visual>
+            <origin
+                    xyz="0 0 0.0"
+                    rpy="1.57 0 1.57" />
+            <geometry>
+                <mesh filename="package://scout_description/meshes/scout_mini_base_link2.dae" />
+            </geometry>
+        </visual>
+        <collision>
+            <origin
+                    xyz="0 0 0"
+                    rpy="1.57 0 1.57" />
+          <geometry>
+            <mesh
+              filename="package://scout_description/meshes/scout_mini_base_link2.dae" />
+          </geometry>
+        </collision>
+    </link>
+
+    <!-- <joint name="chassis_link_joint" type="fixed">
+        <origin xyz="0 0 ${wheel_radius - wheel_vertical_offset}" rpy="0 0 0" />
+        <parent link="base_link" />
+        <child link="chassis_link" />
+    </joint> -->
+
+    <link name="inertial_link">
+        <inertial>
+            <mass value="60" />
+            <origin xyz="0.0 0.0 0.0" />
+            <inertia ixx="2.288641" ixy="0" ixz="0" iyy="5.103976" iyz="0" izz="3.431465" />
+        </inertial>
+    </link>
+
+    <joint name="inertial_joint" type="fixed">
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <parent link="base_link" />
+        <child link="inertial_link" />
+    </joint>
+
+    <!-- For testing, hang the robot up in the air -->
+    <!-- <link name="world" />
+    <joint name="world_to_base_link=" type="fixed">
+        <origin xyz="0 0 0.5" rpy="0 0 0" />
+        <parent link="world"/>
+        <child link="base_link"/>
+    </joint> -->
+
+    <!-- Scout wheel macros -->
+    <!-- wheel labeled from 0 to 3, conter-clockwise, starting from front right wheel -->
+    <!-- motor 1 and 2 (left side) are mechanically installed in a reversed direction -->
+    <xacro:scout_mini_wheel_1 wheel_prefix="front_left">
+    <!--<origin
+            xyz="0 0 0"
+            rpy="0 0 0" />-->
+        <origin xyz="${wheelbase/2} ${track/2} ${wheel_vertical_offset}" rpy="-1.57 0 0" />
+    </xacro:scout_mini_wheel_1>
+    <xacro:scout_mini_wheel_2 wheel_prefix="rear_left">
+    <!--<origin
+            xyz="0 0 0"
+            rpy="0 0 0" />-->
+        <origin xyz="${-wheelbase/2} ${track/2} ${wheel_vertical_offset}" rpy="-1.57 0 0" />
+    </xacro:scout_mini_wheel_2>
+    <xacro:scout_mini_wheel_3 wheel_prefix="front_right">
+    <!--<origin
+            xyz="0 0 0"
+            rpy="0 0 0" />-->
+        <origin xyz="${wheelbase/2} ${-track/2} ${wheel_vertical_offset+0.001}" rpy="1.57 0 0" />
+    </xacro:scout_mini_wheel_3>
+    <xacro:scout_mini_wheel_4 wheel_prefix="rear_right">
+    <!--<origin
+           xyz="0 0 0"
+           rpy="0 0 0" />-->
+        <origin xyz="${-wheelbase/2} ${-track/2} ${wheel_vertical_offset+0.001}" rpy="1.57 0 0" />
+    </xacro:scout_mini_wheel_4>
+
+    <!-- Additional definitions -->
+    <xacro:include filename="$(arg urdf_extras)" />
+
+    <!-- Gazebo definitions  -->
+    <xacro:include filename="$(find scout_description)/urdf/scout_mini.gazebo" />
+</robot>
