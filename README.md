@@ -1,3 +1,3 @@
 # agccrm-material
-Models and datasets
+Datasets
 https://drive.google.com/drive/folders/1QryiFhGnNF47kIYbDRNg10Zxt9XBHPyW?usp=drive_link
